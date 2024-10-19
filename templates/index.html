@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4A Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #chat-container {
+            width: 100%;
+            max-width: 600px;
+            height: 90vh; /* Make it almost full screen */
+            background-color: #fff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #chat-box {
+            flex-grow: 1;
+            padding: 15px;
+            border-bottom: 1px solid #ccc;
+            overflow-y: auto;
+            background-color: #fafafa;
+        }
+
+        .user-message {
+            color: blue;
+            margin: 5px 0;
+        }
+
+        .bot-message {
+            color: green;
+            margin: 5px 0;
+        }
+
+        #loading-dots {
+            display: none;
+            text-align: center;
+            font-style: italic;
+        }
+
+        #user-input-area {
+            display: flex;
+            padding: 10px;
+            background-color: #fff;
+        }
+
+        #user-input {
+            flex-grow: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        /* Mobile-friendly adjustments */
+        @media (max-width: 600px) {
+            #chat-container {
+                width: 100%;
+                height: 100vh; /* Full height on small devices */
+                border-radius: 0;
+            }
+
+            button {
+                padding: 10px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <div id="loading-dots">Typing<span class="dots">...</span></div>
+        <div id="user-input-area">
+            <input type="text" id="user-input" placeholder="Type your message..." onkeydown="if(event.key === 'Enter'){ sendMessage(); }" autofocus>
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Function to send the message to the backend
+        function sendMessage() {
+            const userMessage = document.getElementById('user-input').value.trim();
+            const chatBox = document.getElementById('chat-box');
+
+            if (userMessage) {
+                // Display the user's message
+                chatBox.innerHTML += '<p class="user-message">You: ' + userMessage + '</p>';
+                chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
+
+                // Show loading dots while bot processes the response
+                document.getElementById('loading-dots').style.display = 'block';
+
+                // Send the user message to the backend
+                fetch('http://localhost:5500/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: userMessage
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    setTimeout(() => {
+                        // Hide loading dots
+                        document.getElementById('loading-dots').style.display = 'none';
+
+                        // Display bot response
+                        chatBox.innerHTML += '<p class="bot-message">4A: ' + data.response + '</p>';
+                        chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
+                    }, 1500); // Simulate a delay of 1.5 seconds
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    chatBox.innerHTML += '<p class="bot-message">4A: Sorry, I encountered an error.</p>';
+                });
+
+                // Clear the input field after sending
+                document.getElementById('user-input').value = '';
+            }
+        }
+    </script>
+
+</body>
+</html>
